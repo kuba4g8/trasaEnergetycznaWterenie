@@ -1,0 +1,39 @@
+# --- KOMPILACJA I WYJŚCIE ---
+*.class
+# Logi wygenerowane przez aplikację
+*.log
+# Folder wyjściowy IntelliJ (tam trafiają skompilowane pliki)
+out/
+# Folder wyjściowy Mavena
+target/
+# Folder wyjściowy Gradle
+build/
+.gradle/
+
+# --- INTELLIJ IDEA ---
+.idea/
+*.iml
+*.iws
+*.ipr
+# Czasami chcemy zachować konfigurację runConfigurations, 
+# ale dla bezpieczeństwa w projektach studenckich lepiej ignorować wszystko
+out/
+
+# --- PLIKI PACZEK (opcjonalnie) ---
+# Jeśli budujesz jary, nie chcesz ich w repozytorium
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+
+# --- LOGI BŁĘDÓW MASZYNY WIRTUALNEJ JAVA ---
+hs_err_pid*
+
+# --- SYSTEMOWE ---
+.DS_Store
+Thumbs.db
+
+# --- PLIKI PROJEKTOWE (jeśli używasz VS Code dodatkowo) ---
+.vscode/
+.history/

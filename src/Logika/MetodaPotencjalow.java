@@ -14,15 +14,16 @@ public class MetodaPotencjalow {
         Set<Node> visited = new HashSet<>(); // Zapobiega kręceniu się w kółko
         
         Node current = startPoint;
+        current.gScore = 0; // Inicjalizacja kosztu startu
         path.add(current);
         visited.add(current);
-        
+
         int maxSteps = 200; // Zwiększamy limit kroków dla większych map
         while (current != targetPoint && maxSteps > 0) {
             List<Node> neighbors = terrainMap.getNeighbors(current);
             Node bestNeighbor = null;
             double minPotential = Double.MAX_VALUE;
-            
+
             for (Node neighbor : neighbors) {
                 // Wybieramy sąsiada z najniższym potencjałem, którego jeszcze nie odwiedziliśmy
                 if (!visited.contains(neighbor) && neighbor.potential < minPotential) {
@@ -30,12 +31,17 @@ public class MetodaPotencjalow {
                     bestNeighbor = neighbor;
                 }
             }
-            
+
             // Jeśli nie ma gdzie pójść (wszystko odwiedzone lub brak sąsiadów)
             if (bestNeighbor == null) {
                 System.out.println("Metoda Potencjałów: Całkowita blokada (brak nieodwiedzonych sąsiadów)!");
                 break;
             }
+
+            // Obliczamy rzeczywisty koszt energetyczny przejścia
+            double kosztPrzejscia = terrainMap.obliczEnergie(current, bestNeighbor);
+            bestNeighbor.gScore = current.gScore + kosztPrzejscia;
+            bestNeighbor.parent = current;
             
             current = bestNeighbor;
             path.add(current);

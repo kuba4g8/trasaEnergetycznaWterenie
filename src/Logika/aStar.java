@@ -24,7 +24,7 @@ public class aStar {
                 return buildFinalPath(targetPoint);
             }
             
-            for (Node neighbor : terrainMap.getNeighbors(current))
+            for (Node neighbor : terrainMap.getNeighbors(current, terrainMap.czyNaUkos))
             {
                 double costToNeighbor = terrainMap.obliczEnergie(current, neighbor);
                 double tentativeGScore = current.gScore + costToNeighbor;

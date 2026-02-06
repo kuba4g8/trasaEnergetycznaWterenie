@@ -20,7 +20,7 @@ public class MetodaPotencjalow {
 
         int maxSteps = 200; // Zwiększamy limit kroków dla większych map
         while (current != targetPoint && maxSteps > 0) {
-            List<Node> neighbors = terrainMap.getNeighbors(current);
+            List<Node> neighbors = terrainMap.getNeighbors(current, terrainMap.czyNaUkos);
             Node bestNeighbor = null;
             double minPotential = Double.MAX_VALUE;
 

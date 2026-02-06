@@ -4,13 +4,14 @@ import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-        double[][] bitmapa = BitmapsHolder.mazeMapSmaller;
+        double[][] bitmapa = BitmapsHolder.mapData;
+        boolean czyMozeIscNaUkos = true;
         
-        Grid terrain = new Grid(bitmapa.length, bitmapa.length, bitmapa);
+        Grid terrain = new Grid(bitmapa.length, bitmapa.length, bitmapa, czyMozeIscNaUkos);
         Node start = terrain.getNode(1, 1);
         Node target = terrain.getNode(13, 13);
 
-        // Uruchomienie GUI w wątku Event Dispatch Thread
+        // Uruchomienie GUI
         SwingUtilities.invokeLater(() -> {
             PathfindingGUI gui = new PathfindingGUI(terrain, start, target);
             gui.setVisible(true);

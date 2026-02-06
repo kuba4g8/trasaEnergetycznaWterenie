@@ -25,7 +25,7 @@ public class Dijkstra
                 return reconstructPath(cel);
             }
             
-            List<Node> neigboursOfCurrent = grid.getNeighbors(current);
+            List<Node> neigboursOfCurrent = grid.getNeighbors(current, grid.czyNaUkos);
             
             for (Node neighbor : neigboursOfCurrent)
             {

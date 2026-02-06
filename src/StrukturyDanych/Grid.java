@@ -5,31 +5,40 @@ import java.util.*;
 public class Grid
 {
     private Node[][] punkty;
+    public boolean czyNaUkos;
     private int width;
     private int height;
     
-    public Grid(int width, int height, double[][] gridWysokosci)
+    public Grid(int width, int height, double[][] gridWysokosci, boolean czyNaUkos)
     {
         this.width = width;
         this.height = height;
+        this.czyNaUkos = czyNaUkos;
         
         punkty = new Node[width][height];
         supplyPunkty(gridWysokosci);
     }
     
-    public List<Node> getNeighbors(Node node)
+    public List<Node> getNeighbors(Node node, boolean czyNaUkos)
     {
         List<Node> neighbors = new ArrayList<>();
         
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++)
+        {
+            for (int dy = -1; dy <= 1; dy++)
+            {
+                
                 if (dx == 0 && dy == 0)
+                    continue;
+                
+                if (!czyNaUkos && dx != 0 && dy != 0)
                     continue;
                 
                 int newX = node.elements.x + dx;
                 int newY = node.elements.y + dy;
                 
-                if (newX >= 0 && newX < width && newY >= 0 && newY < height) {
+                if (newX >= 0 && newX < width && newY >= 0 && newY < height)
+                {
                     neighbors.add(punkty[newX][newY]);
                 }
             }
@@ -43,8 +52,10 @@ public class Grid
     }
     
     public void resetGrid() {
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
                 Node n = punkty[i][j];
                 n.parent = null;
                 n.gScore = Double.POSITIVE_INFINITY;

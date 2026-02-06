@@ -56,7 +56,7 @@ public class MetodaPotencjalow {
         // ZMNIEJSZONA WAGA: wysokość nie może być ważniejsza niż dotarcie do celu
         double terrainWeight = 0.2;
         
-        for (int x = 0; x < grid.getWidht(); x++) {
+        for (int x = 0; x < grid.getWidth(); x++) {
             for (int y = 0; y < grid.getHeight(); y++) {
                 Node n = grid.getNode(x, y);
                 double attraction = calculateDistance(n, target);

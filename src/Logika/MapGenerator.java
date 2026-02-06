@@ -35,8 +35,10 @@ public class MapGenerator {
     
     private static void addRandomHill(double[][] map, int width, int height, double maxRadius) {
         // Losowanie parametrów pojedynczej górki
-        double centerX = random.nextDouble() * width;
-        double centerY = random.nextDouble() * height;
+        // Pozwalamy środkowi górki być poza mapą (bufor o wielkości maxRadius), 
+        // aby uniknąć kumulacji wysokości w centrum i "pustych" brzegów.
+        double centerX = (random.nextDouble() * (width + 2 * maxRadius)) - maxRadius;
+        double centerY = (random.nextDouble() * (height + 2 * maxRadius)) - maxRadius;
         double radius = random.nextDouble() * maxRadius + 1.0;
         double peakHeight = random.nextDouble();
         
@@ -109,8 +111,8 @@ public class MapGenerator {
     }
     
     private static int calculateHillCount(int width, int height) {
-        // Empirycznie: połowa liczby pól daje dobre pokrycie terenu
-        return (int) (width * height * 0.5);
+        // Zwiększamy liczbę górek, aby lepiej pokryć teren przy szerszym zakresie losowania środków
+        return (int) (width * height * 0.8);
     }
     
     private static double calculateMaxHillRadius(int width, int height) {

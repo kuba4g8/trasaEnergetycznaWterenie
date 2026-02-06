@@ -6,8 +6,8 @@ import javax.swing.*;
 public class Main {
     public static void main(String[] args) {
         double[][] bitmapa = BitmapsHolder.mapData;
-        bitmapa = MapGenerator.generateRandomMap(15, 15, -100, 1000);
-        boolean czyMozeIscNaUkos = true;
+        bitmapa = MapGenerator.generateRandomMap(15, 15, -100, 300);
+        boolean czyMozeIscNaUkos = false;
         
         Grid terrain = new Grid(bitmapa.length, bitmapa.length, bitmapa, czyMozeIscNaUkos);
         Node start = terrain.getNode(0, 0);

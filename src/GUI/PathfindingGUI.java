@@ -6,6 +6,7 @@ import Logika.MetodaPotencjalow;
 import StrukturyDanych.Grid;
 import StrukturyDanych.Node;
 
+import Logika.MapGenerator;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
@@ -17,6 +18,10 @@ public class PathfindingGUI extends JFrame {
     private TerrainVisualizer visualizer;
     private JLabel statusLabel;
     private JLabel costLabel;
+    private JCheckBox diagonalCheckBox;
+    private JTextField sizeField;
+    private JTextField minHeightField;
+    private JTextField maxHeightField;
 
     public PathfindingGUI(Grid grid, Node start, Node end) {
         this.grid = grid;
@@ -83,12 +88,70 @@ public class PathfindingGUI extends JFrame {
         clearButton.setFont(new Font("Arial", Font.BOLD, 14));
         clearButton.addActionListener(e -> clearPath());
 
+        JButton generateMapButton = new JButton("Generuj Mapę");
+        generateMapButton.setBackground(new Color(60, 179, 113));
+        generateMapButton.setForeground(Color.WHITE);
+        generateMapButton.setFocusPainted(false);
+        generateMapButton.setFont(new Font("Arial", Font.BOLD, 14));
+        generateMapButton.addActionListener(e -> generateRandomMap());
+
+        diagonalCheckBox = new JCheckBox("Ruch na ukos", grid.czyNaUkos);
+        diagonalCheckBox.setFont(new Font("Arial", Font.PLAIN, 14));
+        diagonalCheckBox.addActionListener(e -> grid.czyNaUkos = diagonalCheckBox.isSelected());
+
         panel.add(dijkstraButton);
         panel.add(aStarButton);
         panel.add(potentialButton);
         panel.add(clearButton);
+        panel.add(generateMapButton);
+        panel.add(diagonalCheckBox);
+
+        // Panel parametrów generowania
+        JPanel genParamsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        genParamsPanel.setBorder(BorderFactory.createTitledBorder("Parametry Generowania"));
+
+        sizeField = new JTextField("15", 3);
+        minHeightField = new JTextField("-100", 4);
+        maxHeightField = new JTextField("500", 4);
+
+        genParamsPanel.add(new JLabel("Wymiary mapy:"));
+        genParamsPanel.add(sizeField);
+        genParamsPanel.add(new JLabel("Min wys:"));
+        genParamsPanel.add(minHeightField);
+        genParamsPanel.add(new JLabel("Max wys:"));
+        genParamsPanel.add(maxHeightField);
+
+        panel.add(genParamsPanel);
 
         return panel;
+    }
+
+    private void generateRandomMap() {
+        try {
+            int n = Integer.parseInt(sizeField.getText());
+            double minH = Double.parseDouble(minHeightField.getText());
+            double maxH = Double.parseDouble(maxHeightField.getText());
+
+            if (n <= 0) {
+                JOptionPane.showMessageDialog(this, "Wymiar musi być dodatni!", "Błąd", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            double[][] bitmapa = MapGenerator.generateRandomMap(n, n, minH, maxH);
+            grid = new Grid(n, n, bitmapa, diagonalCheckBox.isSelected());
+            start = grid.getNode(0, 0);
+            end = grid.getNode(n - 1, n - 1);
+
+            visualizer.updateGrid(grid);
+            visualizer.setStartAndEnd(start, end);
+            visualizer.setPath(null, Color.RED);
+
+            statusLabel.setText(String.format("Wygenerowano nową mapę %dx%d (wys: (%.0f) - (%.0f))", n, n, minH, maxH));
+            costLabel.setText("");
+            pack();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Nieprawidłowy format liczb!", "Błąd", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private JPanel createInfoPanel() {
@@ -161,9 +224,20 @@ public class PathfindingGUI extends JFrame {
         costLabel.setText("");
 
         SwingWorker<List<Node>, Void> worker = new SwingWorker<>() {
+            private double executionTime;
+
             @Override
             protected List<Node> doInBackground() {
-                return Dijkstra.znajdzTrase(grid, start, end);
+                // Rozgrzewka (Warm-up) dla JIT - stabilizuje czas wykonania
+                for (int i = 0; i < 5; i++) {
+                    Dijkstra.znajdzTrase(grid, start, end);
+                }
+                
+                long startTime = System.nanoTime();
+                List<Node> result = Dijkstra.znajdzTrase(grid, start, end);
+                long endTime = System.nanoTime();
+                executionTime = (endTime - startTime) / 1_000_000.0; // ms
+                return result;
             }
 
             @Override
@@ -176,7 +250,7 @@ public class PathfindingGUI extends JFrame {
                     } else {
                         visualizer.setPath(path, new Color(255, 99, 71));
                         statusLabel.setText("Dijkstra: Długość: " + path.size() + " punktów");
-                        costLabel.setText(String.format("Koszt energetyczny: %.2f", end.gScore));
+                        costLabel.setText(String.format("Koszt energetyczny: %.2f | Czas: %.3f ms", end.gScore, executionTime));
                     }
                 } catch (Exception e) {
                     statusLabel.setText("Błąd: " + e.getMessage());
@@ -191,9 +265,20 @@ public class PathfindingGUI extends JFrame {
         costLabel.setText("");
 
         SwingWorker<List<Node>, Void> worker = new SwingWorker<>() {
+            private double executionTime;
+
             @Override
             protected List<Node> doInBackground() {
-                return aStar.znajdzTrase(grid, start, end);
+                // Rozgrzewka (Warm-up) dla JIT - stabilizuje czas wykonania
+                for (int i = 0; i < 5; i++) {
+                    aStar.znajdzTrase(grid, start, end);
+                }
+
+                long startTime = System.nanoTime();
+                List<Node> result = aStar.znajdzTrase(grid, start, end);
+                long endTime = System.nanoTime();
+                executionTime = (endTime - startTime) / 1_000_000.0; // ms
+                return result;
             }
 
             @Override
@@ -206,7 +291,7 @@ public class PathfindingGUI extends JFrame {
                     } else {
                         visualizer.setPath(path, new Color(30, 144, 255));
                         statusLabel.setText("A*: Długość: " + path.size() + " punktów");
-                        costLabel.setText(String.format("Koszt energetyczny: %.2f", end.gScore));
+                        costLabel.setText(String.format("Koszt energetyczny: %.2f | Czas: %.3f ms", end.gScore, executionTime));
                     }
                 } catch (Exception e) {
                     statusLabel.setText("Błąd: " + e.getMessage());
@@ -221,9 +306,20 @@ public class PathfindingGUI extends JFrame {
         costLabel.setText("");
 
         SwingWorker<List<Node>, Void> worker = new SwingWorker<>() {
+            private double executionTime;
+
             @Override
             protected List<Node> doInBackground() {
-                return MetodaPotencjalow.znajdzTrase(grid, start, end);
+                // Rozgrzewka (Warm-up) dla JIT - stabilizuje czas wykonania
+                for (int i = 0; i < 5; i++) {
+                    MetodaPotencjalow.znajdzTrase(grid, start, end);
+                }
+
+                long startTime = System.nanoTime();
+                List<Node> result = MetodaPotencjalow.znajdzTrase(grid, start, end);
+                long endTime = System.nanoTime();
+                executionTime = (endTime - startTime) / 1_000_000.0; // ms
+                return result;
             }
 
             @Override
@@ -232,14 +328,14 @@ public class PathfindingGUI extends JFrame {
                     List<Node> path = get();
                     if (path.isEmpty() || path.get(path.size() - 1) != end) {
                         statusLabel.setText("Metoda Potencjałów: Nie dotarła do celu!");
-                        costLabel.setText("Algorytm utknął w lokalnym minimum");
+                        costLabel.setText(String.format("Algorytm utknął | Czas: %.3f ms", executionTime));
                         if (!path.isEmpty()) {
                             visualizer.setPath(path, new Color(255, 165, 0));
                         }
                     } else {
                         visualizer.setPath(path, new Color(255, 165, 0));
                         statusLabel.setText("Metoda Potencjałów: Długość: " + path.size() + " punktów");
-                        costLabel.setText(String.format("Koszt energetyczny: %.2f", end.gScore));
+                        costLabel.setText(String.format("Koszt energetyczny: %.2f | Czas: %.3f ms", end.gScore, executionTime));
                     }
                 } catch (Exception e) {
                     statusLabel.setText("Błąd: " + e.getMessage());

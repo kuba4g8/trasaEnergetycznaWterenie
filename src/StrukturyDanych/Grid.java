@@ -108,7 +108,7 @@ public class Grid
         }
     }
     
-    public int getWidht()
+    public int getWidth()
     {
         return width;
     }

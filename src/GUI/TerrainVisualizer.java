@@ -17,10 +17,19 @@ public class TerrainVisualizer extends JPanel {
     public TerrainVisualizer(Grid grid) {
         this.grid = grid;
         this.pathColor = Color.RED;
-        int width = grid.getWidht() * CELL_SIZE;
+        int width = grid.getWidth() * CELL_SIZE;
         int height = grid.getHeight() * CELL_SIZE;
         setPreferredSize(new Dimension(width, height));
         setBackground(Color.WHITE);
+    }
+
+    public void updateGrid(Grid grid) {
+        this.grid = grid;
+        int width = grid.getWidth() * CELL_SIZE;
+        int height = grid.getHeight() * CELL_SIZE;
+        setPreferredSize(new Dimension(width, height));
+        revalidate();
+        repaint();
     }
 
     public void setPath(List<Node> path, Color color) {
@@ -64,7 +73,7 @@ public class TerrainVisualizer extends JPanel {
     private void drawTerrain(Graphics2D g2d) {
         double maxHeight = findMaxHeight();
 
-        for (int x = 0; x < grid.getWidht(); x++) {
+        for (int x = 0; x < grid.getWidth(); x++) {
             for (int y = 0; y < grid.getHeight(); y++) {
                 Node node = grid.getNode(x, y);
                 double height = node.elements.height;
@@ -132,12 +141,12 @@ public class TerrainVisualizer extends JPanel {
         g2d.setColor(new Color(0, 0, 0, 50));
         g2d.setStroke(new BasicStroke(1));
 
-        for (int x = 0; x <= grid.getWidht(); x++) {
+        for (int x = 0; x <= grid.getWidth(); x++) {
             g2d.drawLine(x * CELL_SIZE, 0, x * CELL_SIZE, grid.getHeight() * CELL_SIZE);
         }
 
         for (int y = 0; y <= grid.getHeight(); y++) {
-            g2d.drawLine(0, y * CELL_SIZE, grid.getWidht() * CELL_SIZE, y * CELL_SIZE);
+            g2d.drawLine(0, y * CELL_SIZE, grid.getWidth() * CELL_SIZE, y * CELL_SIZE);
         }
     }
 
@@ -161,7 +170,7 @@ public class TerrainVisualizer extends JPanel {
 
     private double findMaxHeight() {
         double max = 0;
-        for (int x = 0; x < grid.getWidht(); x++) {
+        for (int x = 0; x < grid.getWidth(); x++) {
             for (int y = 0; y < grid.getHeight(); y++) {
                 double height = grid.getNode(x, y).elements.height;
                 if (height < 10000 && height > max) { // Ignorujemy mury

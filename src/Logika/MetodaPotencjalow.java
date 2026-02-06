@@ -6,55 +6,63 @@ import java.util.*;
 
 public class MetodaPotencjalow {
     
+    
     public static List<Node> znajdzTrase(Grid terrainMap, Node startPoint, Node targetPoint) {
         terrainMap.resetGrid();
         obliczPolePotencjalow(terrainMap, targetPoint);
         
-        List<Node> path = new ArrayList<>();
-        Set<Node> visited = new HashSet<>(); // Zapobiega kręceniu się w kółko
+        Stack<Node> pathStack = new Stack<>();
+        Set<Node> visited = new HashSet<>();
         
         Node current = startPoint;
-        current.gScore = 0; // Inicjalizacja kosztu startu
-        path.add(current);
+        current.gScore = 0;
+        
+        pathStack.push(current);
         visited.add(current);
-
-        int maxSteps = 200; // Zwiększamy limit kroków dla większych map
-        while (current != targetPoint && maxSteps > 0) {
+        
+        int maxSteps = terrainMap.getWidth() * terrainMap.getHeight() * 10;
+        
+        while (!pathStack.isEmpty() && maxSteps > 0) {
+            current = pathStack.peek();
+            
+            if (current.equals(targetPoint)) {
+                return new ArrayList<>(pathStack);
+            }
+            
             List<Node> neighbors = terrainMap.getNeighbors(current, terrainMap.czyNaUkos);
             Node bestNeighbor = null;
             double minPotential = Double.MAX_VALUE;
-
+            
             for (Node neighbor : neighbors) {
-                // Wybieramy sąsiada z najniższym potencjałem, którego jeszcze nie odwiedziliśmy
-                if (!visited.contains(neighbor) && neighbor.potential < minPotential) {
-                    minPotential = neighbor.potential;
-                    bestNeighbor = neighbor;
+                if (!visited.contains(neighbor)) {
+                    if (neighbor.potential < minPotential) {
+                        minPotential = neighbor.potential;
+                        bestNeighbor = neighbor;
+                    }
                 }
             }
-
-            // Jeśli nie ma gdzie pójść (wszystko odwiedzone lub brak sąsiadów)
-            if (bestNeighbor == null) {
-                System.out.println("Metoda Potencjałów: Całkowita blokada (brak nieodwiedzonych sąsiadów)!");
-                break;
-            }
-
-            // Obliczamy rzeczywisty koszt energetyczny przejścia
-            double kosztPrzejscia = terrainMap.obliczEnergie(current, bestNeighbor);
-            bestNeighbor.gScore = current.gScore + kosztPrzejscia;
-            bestNeighbor.parent = current;
             
-            current = bestNeighbor;
-            path.add(current);
-            visited.add(current);
+            if (bestNeighbor != null) {
+                // Idziemy naprzód
+                double kosztPrzejscia = terrainMap.obliczEnergie(current, bestNeighbor);
+                bestNeighbor.gScore = current.gScore + kosztPrzejscia;
+                bestNeighbor.parent = current; // Rodzic dla spójności
+                
+                visited.add(bestNeighbor);
+                pathStack.push(bestNeighbor);
+            } else {
+                pathStack.pop();
+            }
+            
             maxSteps--;
         }
         
-        return path;
+        System.out.println("Metoda Potencjałów: Nie znaleziono trasy (stos pusty lub limit kroków).");
+        return new ArrayList<>();
     }
     
     private static void obliczPolePotencjalow(Grid grid, Node target) {
-        // ZMNIEJSZONA WAGA: wysokość nie może być ważniejsza niż dotarcie do celu
-        double terrainWeight = 0.2;
+        double terrainWeight = 0.5;
         
         for (int x = 0; x < grid.getWidth(); x++) {
             for (int y = 0; y < grid.getHeight(); y++) {

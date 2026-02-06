@@ -113,9 +113,9 @@ public class PathfindingGUI extends JFrame {
         JPanel genParamsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
         genParamsPanel.setBorder(BorderFactory.createTitledBorder("Parametry Generowania"));
 
-        sizeField = new JTextField("15", 3);
+        sizeField = new JTextField("1000", 3);
         minHeightField = new JTextField("-100", 4);
-        maxHeightField = new JTextField("500", 4);
+        maxHeightField = new JTextField("150", 4);
 
         genParamsPanel.add(new JLabel("Wymiary mapy:"));
         genParamsPanel.add(sizeField);

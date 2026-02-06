@@ -12,23 +12,25 @@ public class TerrainVisualizer extends JPanel {
     private Node start;
     private Node end;
     private Color pathColor;
-    private static final int CELL_SIZE = 50;
+    private double scaleX = 1.0;
+    private double scaleY = 1.0;
+    private static final int INITIAL_VIEW_SIZE = 800;
 
     public TerrainVisualizer(Grid grid) {
         this.grid = grid;
         this.pathColor = Color.RED;
-        int width = grid.getWidth() * CELL_SIZE;
-        int height = grid.getHeight() * CELL_SIZE;
-        setPreferredSize(new Dimension(width, height));
         setBackground(Color.WHITE);
+        setPreferredSize(new Dimension(INITIAL_VIEW_SIZE, INITIAL_VIEW_SIZE));
+    }
+
+    private void updateScales() {
+        if (grid == null) return;
+        scaleX = (double) getWidth() / grid.getWidth();
+        scaleY = (double) getHeight() / grid.getHeight();
     }
 
     public void updateGrid(Grid grid) {
         this.grid = grid;
-        int width = grid.getWidth() * CELL_SIZE;
-        int height = grid.getHeight() * CELL_SIZE;
-        setPreferredSize(new Dimension(width, height));
-        revalidate();
         repaint();
     }
 
@@ -47,6 +49,9 @@ public class TerrainVisualizer extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        if (grid == null) return;
+        
+        updateScales();
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -66,75 +71,116 @@ public class TerrainVisualizer extends JPanel {
             drawPoint(g2d, end, Color.BLUE, "C");
         }
 
-        // Rysowanie siatki
-        drawGrid(g2d);
+        // Rysowanie siatki (tylko jeśli komórki są wystarczająco duże)
+        if (scaleX > 5 && scaleY > 5) {
+            drawGrid(g2d);
+        }
     }
 
     private void drawTerrain(Graphics2D g2d) {
         double maxHeight = findMaxHeight();
+        int w = getWidth();
+        int h = getHeight();
+
+        // Jeśli mapa jest bardzo duża, rysujemy ją piksel po pikselu na BufferedImage dla wydajności
+        if (grid.getWidth() > w || grid.getHeight() > h) {
+            drawOptimizedTerrain(g2d, maxHeight);
+            return;
+        }
 
         for (int x = 0; x < grid.getWidth(); x++) {
+            int xPos = (int) (x * scaleX);
+            int nextXPos = (int) ((x + 1) * scaleX);
+            int cellW = Math.max(1, nextXPos - xPos);
+
             for (int y = 0; y < grid.getHeight(); y++) {
                 Node node = grid.getNode(x, y);
                 double height = node.elements.height;
 
-                // Obliczanie koloru na podstawie wysokości
+                int yPos = (int) (y * scaleY);
+                int nextYPos = (int) ((y + 1) * scaleY);
+                int cellH = Math.max(1, nextYPos - yPos);
+
                 Color color = getHeightColor(height, maxHeight);
                 g2d.setColor(color);
-                g2d.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                g2d.fillRect(xPos, yPos, cellW, cellH);
 
-                // Rysowanie wysokości jako tekst
-                g2d.setColor(Color.BLACK);
-                g2d.setFont(new Font("Arial", Font.PLAIN, 10));
-                String heightText = String.format("%.0f", height);
-                FontMetrics fm = g2d.getFontMetrics();
-                int textWidth = fm.stringWidth(heightText);
-                int textHeight = fm.getAscent();
-                g2d.drawString(heightText, 
-                    x * CELL_SIZE + (CELL_SIZE - textWidth) / 2,
-                    y * CELL_SIZE + (CELL_SIZE + textHeight) / 2 - 2);
+                if (cellW >= 20 && cellH >= 20) {
+                    drawHeightText(g2d, xPos, yPos, cellW, cellH, height);
+                }
             }
         }
     }
 
+    private void drawOptimizedTerrain(Graphics2D g2d, double maxHeight) {
+        int w = getWidth();
+        int h = getHeight();
+        if (w <= 0 || h <= 0) return;
+
+        java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_RGB);
+        
+        for (int screenX = 0; screenX < w; screenX++) {
+            int gridX = (int) (screenX / scaleX);
+            gridX = Math.min(gridX, grid.getWidth() - 1);
+            for (int screenY = 0; screenY < h; screenY++) {
+                int gridY = (int) (screenY / scaleY);
+                gridY = Math.min(gridY, grid.getHeight() - 1);
+                
+                double height = grid.getNode(gridX, gridY).elements.height;
+                img.setRGB(screenX, screenY, getHeightColor(height, maxHeight).getRGB());
+            }
+        }
+        g2d.drawImage(img, 0, 0, null);
+    }
+
+    private void drawHeightText(Graphics2D g2d, int x, int y, int cellW, int cellH, double height) {
+        g2d.setColor(Color.BLACK);
+        int fontSize = Math.min(cellW, cellH) / 5 + 2;
+        g2d.setFont(new Font("Arial", Font.PLAIN, fontSize));
+        String heightText = String.format("%.0f", height);
+        FontMetrics fm = g2d.getFontMetrics();
+        int textWidth = fm.stringWidth(heightText);
+        int textHeight = fm.getAscent();
+        g2d.drawString(heightText, 
+            x + (cellW - textWidth) / 2,
+            y + (cellH + textHeight) / 2 - 2);
+    }
+
     private void drawPath(Graphics2D g2d) {
         g2d.setColor(pathColor);
-        g2d.setStroke(new BasicStroke(3));
+        g2d.setStroke(new BasicStroke(Math.max(1, (float)(Math.min(scaleX, scaleY) / 3))));
 
         for (int i = 0; i < path.size() - 1; i++) {
             Node current = path.get(i);
             Node next = path.get(i + 1);
 
-            int x1 = current.elements.x * CELL_SIZE + CELL_SIZE / 2;
-            int y1 = current.elements.y * CELL_SIZE + CELL_SIZE / 2;
-            int x2 = next.elements.x * CELL_SIZE + CELL_SIZE / 2;
-            int y2 = next.elements.y * CELL_SIZE + CELL_SIZE / 2;
+            int x1 = (int) (current.elements.x * scaleX + scaleX / 2);
+            int y1 = (int) (current.elements.y * scaleY + scaleY / 2);
+            int x2 = (int) (next.elements.x * scaleX + scaleX / 2);
+            int y2 = (int) (next.elements.y * scaleY + scaleY / 2);
 
             g2d.drawLine(x1, y1, x2, y2);
-        }
-
-        // Rysowanie punktów na ścieżce
-        g2d.setColor(pathColor.darker());
-        for (Node node : path) {
-            int x = node.elements.x * CELL_SIZE + CELL_SIZE / 2;
-            int y = node.elements.y * CELL_SIZE + CELL_SIZE / 2;
-            g2d.fillOval(x - 4, y - 4, 8, 8);
         }
     }
 
     private void drawPoint(Graphics2D g2d, Node node, Color color, String label) {
-        int x = node.elements.x * CELL_SIZE + CELL_SIZE / 2;
-        int y = node.elements.y * CELL_SIZE + CELL_SIZE / 2;
+        int x = (int) (node.elements.x * scaleX + scaleX / 2);
+        int y = (int) (node.elements.y * scaleY + scaleY / 2);
 
+        int pointSize = (int) Math.max(4, Math.min(scaleX, scaleY) / 2);
+        if (pointSize < 8 && (label.equals("S") || label.equals("C"))) pointSize = 8;
+        
         g2d.setColor(color);
-        g2d.fillOval(x - 10, y - 10, 20, 20);
+        g2d.fillOval(x - pointSize / 2, y - pointSize / 2, pointSize, pointSize);
 
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font("Arial", Font.BOLD, 14));
-        FontMetrics fm = g2d.getFontMetrics();
-        int textWidth = fm.stringWidth(label);
-        int textHeight = fm.getAscent();
-        g2d.drawString(label, x - textWidth / 2, y + textHeight / 2 - 2);
+        if (scaleX >= 15 && scaleY >= 15) {
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Arial", Font.BOLD, (int) Math.max(10, Math.min(scaleX, scaleY) / 3)));
+            FontMetrics fm = g2d.getFontMetrics();
+            int textWidth = fm.stringWidth(label);
+            int textHeight = fm.getAscent();
+            g2d.drawString(label, x - textWidth / 2, y + textHeight / 2 - 2);
+        }
     }
 
     private void drawGrid(Graphics2D g2d) {
@@ -142,11 +188,13 @@ public class TerrainVisualizer extends JPanel {
         g2d.setStroke(new BasicStroke(1));
 
         for (int x = 0; x <= grid.getWidth(); x++) {
-            g2d.drawLine(x * CELL_SIZE, 0, x * CELL_SIZE, grid.getHeight() * CELL_SIZE);
+            int xPos = (int) (x * scaleX);
+            g2d.drawLine(xPos, 0, xPos, getHeight());
         }
 
         for (int y = 0; y <= grid.getHeight(); y++) {
-            g2d.drawLine(0, y * CELL_SIZE, grid.getWidth() * CELL_SIZE, y * CELL_SIZE);
+            int yPos = (int) (y * scaleY);
+            g2d.drawLine(0, yPos, getWidth(), yPos);
         }
     }
 

@@ -42,6 +42,9 @@ public class PathfindingGUI extends JFrame {
 
         JScrollPane scrollPane = new JScrollPane(visualizer);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Mapa Wysokości"));
+        // Wyłączamy paski przewijania, bo mapa ma się skalować do dostępnego miejsca
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
         // Panel kontrolny
@@ -148,7 +151,13 @@ public class PathfindingGUI extends JFrame {
 
             statusLabel.setText(String.format("Wygenerowano nową mapę %dx%d (wys: (%.0f) - (%.0f))", n, n, minH, maxH));
             costLabel.setText("");
-            pack();
+            
+            if (n <= 100) {
+                pack();
+                setLocationRelativeTo(null);
+            }
+            revalidate();
+            repaint();
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Nieprawidłowy format liczb!", "Błąd", JOptionPane.ERROR_MESSAGE);
         }

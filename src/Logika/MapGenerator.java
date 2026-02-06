@@ -31,16 +31,30 @@ public class MapGenerator {
         for (int i = 0; i < numberOfHills; i++) {
             addRandomHill(map, width, height, maxRadius);
         }
+
+        // Dodajemy drobny szum dla mikrozróżnicowania
+        addNoise(map);
+    }
+
+    private static void addNoise(double[][] map) {
+        for (int x = 0; x < map.length; x++) {
+            for (int y = 0; y < map[0].length; y++) {
+                map[x][y] += (random.nextDouble() - 0.5) * 0.1;
+            }
+        }
     }
     
     private static void addRandomHill(double[][] map, int width, int height, double maxRadius) {
         // Losowanie parametrów pojedynczej górki
-        // Pozwalamy środkowi górki być poza mapą (bufor o wielkości maxRadius), 
-        // aby uniknąć kumulacji wysokości w centrum i "pustych" brzegów.
         double centerX = (random.nextDouble() * (width + 2 * maxRadius)) - maxRadius;
         double centerY = (random.nextDouble() * (height + 2 * maxRadius)) - maxRadius;
-        double radius = random.nextDouble() * maxRadius + 1.0;
-        double peakHeight = random.nextDouble();
+        
+        // Zróżnicowanie promienia: niektóre górki bardzo małe, inne duże
+        double radiusPower = random.nextDouble();
+        double radius = Math.pow(radiusPower, 2) * maxRadius + 2.0;
+        
+        // Peak height może być ujemny (tworzenie dolin)
+        double peakHeight = (random.nextDouble() * 2.0 - 0.7); // Więcej dodatnich niż ujemnych
         
         depositHillMaterial(map, centerX, centerY, radius, peakHeight);
     }
@@ -111,13 +125,14 @@ public class MapGenerator {
     }
     
     private static int calculateHillCount(int width, int height) {
-        // Zwiększamy liczbę górek, aby lepiej pokryć teren przy szerszym zakresie losowania środków
-        return (int) (width * height * 0.8);
+        // Skalujemy liczbę górek liniowo do obwodu, nie pola, dla bardzo dużych map
+        // aby uniknąć nadmiernego obciążenia przy generowaniu.
+        return (int) (Math.sqrt((long)width * height) * 2.5);
     }
     
     private static double calculateMaxHillRadius(int width, int height) {
-        // Górka nie powinna być większa niż 1/4 mapy
-        return Math.min(width, height) / 4.0;
+        // Pozwalamy na większe zróżnicowanie promieni
+        return Math.min(width, height) / 2.0;
     }
     
     private static double findMinValue(double[][] map) {

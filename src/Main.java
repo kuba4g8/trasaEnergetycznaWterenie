@@ -1,15 +1,17 @@
 import GUI.PathfindingGUI;
+import Logika.MapGenerator;
 import StrukturyDanych.*;
 import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
         double[][] bitmapa = BitmapsHolder.mapData;
+        bitmapa = MapGenerator.generateRandomMap(15, 15, -100, 1000);
         boolean czyMozeIscNaUkos = true;
         
         Grid terrain = new Grid(bitmapa.length, bitmapa.length, bitmapa, czyMozeIscNaUkos);
-        Node start = terrain.getNode(1, 1);
-        Node target = terrain.getNode(13, 13);
+        Node start = terrain.getNode(0, 0);
+        Node target = terrain.getNode(14, 14);
 
         // Uruchomienie GUI
         SwingUtilities.invokeLater(() -> {

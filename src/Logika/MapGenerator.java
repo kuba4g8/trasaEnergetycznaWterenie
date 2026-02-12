@@ -4,13 +4,34 @@ import java.util.Random;
 
 public class MapGenerator {
     
-    private static final Random random = new Random();
+    // Usunięto 'final', aby można było zmieniać seed w trakcie działania programu
+    private static Random random = new Random();
     
     /**
-     * Główna metoda sterująca procesem generowania mapy.
+     * Wersja podstawowa - generuje losową mapę (różną za każdym razem).
      */
     public static double[][] generateRandomMap(int width, int height, double minWysokosc, double maxWysokosc) {
         
+        random = new Random(); // Nowy losowy seed
+        
+        return stworzMape(width, height, minWysokosc, maxWysokosc);
+    }
+    
+    /**
+     * Wersja deterministyczna - generuje mapę na podstawie podanego seeda.
+     * Dla tego samego seeda mapa zawsze będzie identyczna.
+     */
+    public static double[][] generateRandomMap(int width, int height, double minWysokosc, double maxWysokosc, long seed) {
+        
+        random = new Random(seed); // Ustawienie konkretnego seeda
+        
+        return stworzMape(width, height, minWysokosc, maxWysokosc);
+    }
+    
+    /**
+     * Wspólna logika generowania mapy dla obu metod publicznych.
+     */
+    private static double[][] stworzMape(int width, int height, double minWysokosc, double maxWysokosc) {
         double[][] map = initializeMap(width, height);
         
         nalozenieWysokosci(map, width, height);
@@ -29,16 +50,18 @@ public class MapGenerator {
         double maxRadius = calculateMaxHillRadius(width, height);
         
         for (int i = 0; i < numberOfHills; i++) {
+            
             addRandomHill(map, width, height, maxRadius);
         }
-
+        
         // Dodajemy drobny szum dla mikrozróżnicowania
         addNoise(map);
     }
-
+    
     private static void addNoise(double[][] map) {
         for (int x = 0; x < map.length; x++) {
             for (int y = 0; y < map[0].length; y++) {
+                
                 map[x][y] += (random.nextDouble() - 0.5) * 0.1;
             }
         }
@@ -75,6 +98,7 @@ public class MapGenerator {
                 double elevation = obliczenieWysokosci(x, y, cx, cy, r, h);
                 
                 if (elevation > 0) {
+                    
                     map[x][y] += elevation;
                 }
             }
@@ -92,7 +116,7 @@ public class MapGenerator {
         
         return 0.0;
     }
-
+    
     
     private static void normalizacjaWysokosciMapy(double[][] map, double minTarget, double maxTarget) {
         double currentMin = findMinValue(map);
@@ -101,6 +125,7 @@ public class MapGenerator {
         
         // Zabezpieczenie przed dzieleniem przez zero (gdy mapa jest płaska)
         if (currentRange == 0) {
+            
             currentRange = 1;
         }
         
@@ -119,7 +144,7 @@ public class MapGenerator {
         }
     }
     
-
+    
     private static double[][] initializeMap(int width, int height) {
         return new double[width][height];
     }
@@ -140,6 +165,7 @@ public class MapGenerator {
         
         for (double[] row : map) {
             for (double val : row) {
+                
                 if (val < min) {
                     min = val;
                 }
@@ -153,6 +179,7 @@ public class MapGenerator {
         
         for (double[] row : map) {
             for (double val : row) {
+                
                 if (val > max) {
                     max = val;
                 }

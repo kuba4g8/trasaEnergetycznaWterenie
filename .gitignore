@@ -10,6 +10,9 @@ target/
 build/
 .gradle/
 
+plikiDoSprawozdania/
+*.docx
+
 # --- INTELLIJ IDEA ---
 .idea/
 *.iml

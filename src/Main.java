@@ -1,17 +1,27 @@
 import GUI.PathfindingGUI;
+import Logika.AnalizaWrazliwosci;
 import Logika.MapGenerator;
 import StrukturyDanych.*;
 import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-        double[][] bitmapa = BitmapsHolder.mapData;
-        bitmapa = MapGenerator.generateRandomMap(15, 15, -100, 300);
+        double[][] bitmapa;
+        
+        // to nawet spoczi mapa ale mozna zmienic i bedzie inna
+        long seed = 42L;
+        bitmapa = MapGenerator.generateRandomMap(1000, 1000, -100, 300, seed);
         boolean czyMozeIscNaUkos = false;
         
         Grid terrain = new Grid(bitmapa.length, bitmapa.length, bitmapa, czyMozeIscNaUkos);
         Node start = terrain.getNode(0, 0);
-        Node target = terrain.getNode(14, 14);
+        Node target = terrain.getNode(bitmapa.length - 1, bitmapa.length - 1);
+        // 0 -> Dijkstra
+        // 1 -> A*
+        // 2 -> potencjaly
+/*        AnalizaWrazliwosci.uruchom(bitmapa, 0);
+        AnalizaWrazliwosci.uruchom(bitmapa, 1);
+        AnalizaWrazliwosci.uruchom(bitmapa, 2);*/
 
         // Uruchomienie GUI
         SwingUtilities.invokeLater(() -> {

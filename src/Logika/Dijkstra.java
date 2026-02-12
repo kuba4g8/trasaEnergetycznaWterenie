@@ -4,10 +4,11 @@ import StrukturyDanych.Grid;
 import StrukturyDanych.Node;
 import java.util.*;
 
-public class Dijkstra
+public class Dijkstra extends ZlozonoscObliczeniowa
 {
     public static List<Node> znajdzTrase(Grid grid, Node start, Node cel)
     {
+        resetLicznika();
         PriorityQueue<Node> openSet = new PriorityQueue<>();
         Set<Node> openSetLookup = new HashSet<>();
         Set<Node> closedSet = new HashSet<>();
@@ -22,6 +23,7 @@ public class Dijkstra
         while (!openSet.isEmpty())
         {
             Node current = openSet.poll();
+            liczbaOdwiedzonych++;
             openSetLookup.remove(current);
             
             if (current == cel)

@@ -9,6 +9,12 @@ public class Grid
     private int width;
     private int height;
     
+    public static final double MASS = 80.0;       // Masa obiektu w kg
+    public static final double GRAVITY = 9.81;    // Przyspieszenie ziemskie m/s^2
+    public static final double FRICTION_COEFF = 0.1; // Współczynnik oporów ruchu
+    
+    public double wspolczynnikWysokosci = 1.0;
+    
     public Grid(int width, int height, double[][] gridWysokosci, boolean czyNaUkos)
     {
         this.width = width;
@@ -66,35 +72,46 @@ public class Grid
     }
     
     public double obliczEnergie(Node from, Node to) {
+        // 1. Obliczenie odległości w poziomie (dystans euklidesowy 2D)
         double dx = Math.abs(from.elements.x - to.elements.x);
         double dy = Math.abs(from.elements.y - to.elements.y);
+        double distance2D = (dx + dy == 2) ? Math.sqrt(2) : 1.0;
         
-        // Jeśli suma różnic współrzędnych wynosi 2, to idziemy po skosie (np. 1,1)
-        // Dystans po skosie to pierwiastek z 2 (ok. 1.41), w linii prostej to 1.0
-        double distance = (dx + dy == 2) ? Math.sqrt(2) : 1.0;
-
-        // roznica wysokosci
-        double deltaH = to.elements.height - from.elements.height;
+        // 2. Różnica wysokości (h_koncowe - h_poczatkowe)
+        double heightDiff = to.elements.height - from.elements.height;
         
-        double energyCost = 0;
+        // 3. Model Fizyczny
         
-        // podejscie pod gore
-        if (deltaH > 0)
+        // A. Praca wykonana przeciwko siłom tarcia/oporu na danym dystansie
+        double workFriction = MASS * GRAVITY * FRICTION_COEFF * distance2D;
+        
+        // B. Zmiana Energii Potencjalnej (Praca przeciwko grawitacji)
+        double deltaPotentialEnergy = (MASS * GRAVITY * heightDiff) * wspolczynnikWysokosci;
+        
+        double totalEnergyCost = 0.0;
+        
+        // PODEJŚCIE POD GÓRĘ:
+        if (deltaPotentialEnergy > 0)
         {
-            energyCost = distance + (deltaH * 10.0);
+            // Musimy pokonać opory ruchu ORAZ zwiększyć energię potencjalną.
+            totalEnergyCost = workFriction + deltaPotentialEnergy;
         }
-        // zejscie w dol
-        else if (deltaH < 0)
-        {
-            energyCost = distance + (Math.abs(deltaH) * 1.0);
-        }
-        // plaski teren
         else
         {
-            energyCost = distance;
+            // ZEJŚCIE W DÓŁ / PŁASKO:
+            // Grawitacja "pomaga", ale nadal musimy wykonać pracę, żeby nie spaść (hamowanie)
+            // lub po prostu pokonać opory ruchu.
+            // Przyjmijmy, że koszt to opory ruchu + niewielki koszt hamowania (np. 10% odzyskanej energii tracimy na hamowanie)
+            
+            
+            // jak sie go ustawi np na 0.5 to algorytm nie bedzie schodzil po duzych skarpach
+            float descentCost = 0.1f;
+            
+            totalEnergyCost = workFriction + (Math.abs(deltaPotentialEnergy) * descentCost);
+            
         }
         
-        return energyCost;
+        return totalEnergyCost;
     }
     
     private void supplyPunkty(double[][] gridWysokosci)

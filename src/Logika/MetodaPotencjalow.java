@@ -4,10 +4,13 @@ import StrukturyDanych.Grid;
 import StrukturyDanych.Node;
 import java.util.*;
 
-public class MetodaPotencjalow {
+public class MetodaPotencjalow extends ZlozonoscObliczeniowa
+{
     
     
-    public static List<Node> znajdzTrase(Grid terrainMap, Node startPoint, Node targetPoint) {
+    public static List<Node> znajdzTrase(Grid terrainMap, Node startPoint, Node targetPoint)
+    {
+        resetLicznika();
         terrainMap.resetGrid();
         obliczPolePotencjalow(terrainMap, targetPoint);
         
@@ -24,6 +27,7 @@ public class MetodaPotencjalow {
         
         while (!pathStack.isEmpty() && maxSteps > 0) {
             current = pathStack.peek();
+            liczbaOdwiedzonych++;
             
             if (current.equals(targetPoint)) {
                 return new ArrayList<>(pathStack);
@@ -61,14 +65,21 @@ public class MetodaPotencjalow {
         return new ArrayList<>();
     }
     
-    private static void obliczPolePotencjalow(Grid grid, Node target) {
-        double terrainWeight = 0.5;
+    private static void obliczPolePotencjalow(Grid grid, Node target)
+    {
+        double terrainWeight = grid.wspolczynnikWysokosci;
         
         for (int x = 0; x < grid.getWidth(); x++) {
             for (int y = 0; y < grid.getHeight(); y++) {
                 Node n = grid.getNode(x, y);
+                
                 double attraction = calculateDistance(n, target);
-                double repulsion = n.elements.height * terrainWeight;
+                
+                double height = n.elements.height;
+                double effectiveHeight = Math.max(0.0, height);
+                
+                double repulsion = effectiveHeight * terrainWeight;
+
                 n.potential = attraction + repulsion;
             }
         }

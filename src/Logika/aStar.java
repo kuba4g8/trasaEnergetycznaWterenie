@@ -79,13 +79,21 @@ public class aStar extends ZlozonoscObliczeniowa
         double heightDiff = target.elements.height - current.elements.height;
         
         // 3. Obliczenie minimalnego kosztu fizycznego (HEURYSTYKA)
+        // Musimy uwzględnić, że nawet w dół kosztuje (workFriction + abs(deltaPE)*0.1)
         
         double minFrictionCost = Grid.MASS * Grid.GRAVITY * Grid.FRICTION_COEFF * distanceEuclidean;
         
         double minElevationCost = 0.0;
-        if (heightDiff > 0)
+        double deltaPotentialEnergy = (Grid.MASS * Grid.GRAVITY * heightDiff) * wspolczynnikWysokosci;
+
+        if (deltaPotentialEnergy > 0)
         {
-            minElevationCost = (Grid.MASS * Grid.GRAVITY * heightDiff) * wspolczynnikWysokosci;
+            minElevationCost = deltaPotentialEnergy;
+        }
+        else
+        {
+            // Nawet idąc w dół mamy koszt hamowania
+            minElevationCost = Math.abs(deltaPotentialEnergy) * 0.1;
         }
         
         // Zwracamy sumę. To jest nasze h(n).

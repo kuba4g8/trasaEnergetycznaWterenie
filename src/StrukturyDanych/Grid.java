@@ -102,15 +102,14 @@ public class Grid
             // Grawitacja "pomaga", ale nadal musimy wykonać pracę, żeby nie spaść (hamowanie)
             // lub po prostu pokonać opory ruchu.
             // Przyjmijmy, że koszt to opory ruchu + niewielki koszt hamowania (np. 10% odzyskanej energii tracimy na hamowanie)
-            
-            
-            // jak sie go ustawi np na 0.5 to algorytm nie bedzie schodzil po duzych skarpach
+
+            // Zmiana: jak sie idzie w dol to dalej kosztuje
+            // Koszt to praca tarcia PLUS czesc odzyskanej energii potencjalnej (koszt hamowania)
+
             float descentCost = 0.1f;
-            
             totalEnergyCost = workFriction + (Math.abs(deltaPotentialEnergy) * descentCost);
-            
         }
-        
+
         return totalEnergyCost;
     }
     

@@ -21,6 +21,10 @@ public class Main {
 /*        AnalizaWrazliwosci.uruchom(bitmapa, 0);
         AnalizaWrazliwosci.uruchom(bitmapa, 1);
         AnalizaWrazliwosci.uruchom(bitmapa, 2);*/
+        
+        // Odkomentuj poniższe linie, aby wygenerować dane do sprawozdania w konsoli
+        // AnalizaWrazliwosci.uruchom(bitmapa, 0);
+        // AnalizaWrazliwosci.uruchom(bitmapa, 1);
 
         // Uruchomienie GUI
         SwingUtilities.invokeLater(() -> {

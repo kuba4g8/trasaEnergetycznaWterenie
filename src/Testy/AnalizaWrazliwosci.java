@@ -10,20 +10,59 @@ import java.util.List;
 
 public class AnalizaWrazliwosci
 {
+    public static class WynikAnalizy {
+        public double alpha;
+        public int dlugosc;
+        public double kosztEnergii;
+        public double sredniCzasMs;
+        public double odchylenieMs;
+        public int odwiedzoneWezly;
+
+        public WynikAnalizy(double alpha, int dlugosc, double kosztEnergii, double sredniCzasMs, double odchylenieMs, int odwiedzoneWezly) {
+            this.alpha = alpha;
+            this.dlugosc = dlugosc;
+            this.kosztEnergii = kosztEnergii;
+            this.sredniCzasMs = sredniCzasMs;
+            this.odchylenieMs = odchylenieMs;
+            this.odwiedzoneWezly = odwiedzoneWezly;
+        }
+    }
+
     // jak duza mapa to dac mniejsze
     private static final int LICZBA_POWTORZEN = 10;
     
     // 0 -> Dijkstra, 1 -> A*, 2 -> Potencjaly
     public static void uruchom(double[][] teren, int algorytm)
     {
-        String algorytmNazwa = "";
-        if (algorytm == 0) algorytmNazwa = "Dijkstry";
-        if (algorytm == 1) algorytmNazwa = "A*";
-        if (algorytm == 2) algorytmNazwa = "Metody Potencjalow";
+        List<WynikAnalizy> wyniki = wykonajAnalize(teren, algorytm, LICZBA_POWTORZEN);
+        
+        String algorytmNazwa = pobierzNazweAlgorytmu(algorytm);
         
         System.out.println("\n=== START ANALIZY WRAŻLIWOŚCI (WIELOKROTNE POWTARZANIE) ===");
         System.out.println("Algorytm: " + algorytmNazwa + " | Mapa: " + teren.length + "x" + teren.length);
         System.out.println("Liczba powtórzeń dla każdego pomiaru: " + LICZBA_POWTORZEN);
+        
+        // Nowy nagłówek z kolumnami statystycznymi (Średnia + Odchylenie)
+        System.out.println(String.format("%-10s | %-15s | %-15s | %-15s | %-15s | %-15s",
+                "Alpha", "Długość (kroki)", "Koszt Energii", "Śr. Czas (ms)", "Odchylenie (ms)", "Odwiedzone (N)"));
+        System.out.println("-------------------------------------------------------------------------------------------------------------------");
+        
+        for (WynikAnalizy w : wyniki) {
+            System.out.println(String.format("%-10.1f | %-15d | %-15.2f | %-15.3f | %-15.3f | %-15d",
+                    w.alpha, w.dlugosc, w.kosztEnergii, w.sredniCzasMs, w.odchylenieMs, w.odwiedzoneWezly));
+        }
+        System.out.println("===================================================================================================================\n");
+    }
+
+    public static String pobierzNazweAlgorytmu(int algorytm) {
+        if (algorytm == 0) return "Dijkstry";
+        if (algorytm == 1) return "A*";
+        if (algorytm == 2) return "Metody Potencjalow";
+        return "Nieznany";
+    }
+
+    public static List<WynikAnalizy> wykonajAnalize(double[][] teren, int algorytm, int liczbaPowtorzen) {
+        List<WynikAnalizy> wyniki = new ArrayList<>();
         
         // Tworzymy grid raz
         Grid grid = new Grid(teren.length, teren.length, teren, false);
@@ -31,11 +70,6 @@ public class AnalizaWrazliwosci
         Node koniec = grid.getNode(teren.length - 1, teren.length - 1);
         
         double[] testowaneWartosci = {0.0, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 50.0};
-        
-        // Nowy nagłówek z kolumnami statystycznymi (Średnia + Odchylenie)
-        System.out.println(String.format("%-10s | %-15s | %-15s | %-15s | %-15s | %-15s",
-                "Alpha", "Długość (kroki)", "Koszt Energii", "Śr. Czas (ms)", "Odchylenie (ms)", "Odwiedzone (N)"));
-        System.out.println("-------------------------------------------------------------------------------------------------------------------");
         
         for (double alpha : testowaneWartosci) {
             grid.wspolczynnikWysokosci = alpha;
@@ -46,7 +80,7 @@ public class AnalizaWrazliwosci
             int ostatnieOdwiedzone = 0;
             
             // --- PĘTLA POWTARZAJĄCA EKSPERYMENT ---
-            for (int i = 0; i < LICZBA_POWTORZEN; i++) {
+            for (int i = 0; i < liczbaPowtorzen; i++) {
                 long tStart = System.nanoTime();
                 
                 // Wybór algorytmu
@@ -69,10 +103,9 @@ public class AnalizaWrazliwosci
             double koszt = obliczCalkowityKoszt(grid, przykladowaTrasa);
             int dlugosc = (przykladowaTrasa != null) ? przykladowaTrasa.size() : 0;
             
-            System.out.println(String.format("%-10.1f | %-15d | %-15.2f | %-15.3f | %-15.3f | %-15d",
-                    alpha, dlugosc, koszt, sredniCzas, odchylenie, ostatnieOdwiedzone));
+            wyniki.add(new WynikAnalizy(alpha, dlugosc, koszt, sredniCzas, odchylenie, ostatnieOdwiedzone));
         }
-        System.out.println("===================================================================================================================\n");
+        return wyniki;
     }
     
     // --- METODY POMOCNICZE (Żeby nie było spaghetti w głównej pętli) ---

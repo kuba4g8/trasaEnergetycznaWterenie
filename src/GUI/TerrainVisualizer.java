@@ -4,7 +4,10 @@ import StrukturyDanych.Grid;
 import StrukturyDanych.Node;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public class TerrainVisualizer extends JPanel {
     private Grid grid;
@@ -15,12 +18,47 @@ public class TerrainVisualizer extends JPanel {
     private double scaleX = 1.0;
     private double scaleY = 1.0;
     private static final int INITIAL_VIEW_SIZE = 800;
+    private BiConsumer<Node, Node> onPointsChanged;
 
     public TerrainVisualizer(Grid grid) {
         this.grid = grid;
         this.pathColor = Color.RED;
         setBackground(Color.WHITE);
         setPreferredSize(new Dimension(INITIAL_VIEW_SIZE, INITIAL_VIEW_SIZE));
+
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                handleMouseClick(e);
+            }
+        });
+    }
+
+    private void handleMouseClick(MouseEvent e) {
+        if (grid == null) return;
+
+        updateScales();
+        int x = (int) (e.getX() / scaleX);
+        int y = (int) (e.getY() / scaleY);
+
+        // Zabezpieczenie przed wyjściem poza granice mapy
+        if (x >= 0 && x < grid.getWidth() && y >= 0 && y < grid.getHeight()) {
+            Node clickedNode = grid.getNode(x, y);
+            if (SwingUtilities.isLeftMouseButton(e)) {
+                start = clickedNode;
+            } else if (SwingUtilities.isRightMouseButton(e)) {
+                end = clickedNode;
+            }
+
+            if (onPointsChanged != null) {
+                onPointsChanged.accept(start, end);
+            }
+            repaint();
+        }
+    }
+
+    public void setOnPointsChanged(BiConsumer<Node, Node> callback) {
+        this.onPointsChanged = callback;
     }
 
     private void updateScales() {

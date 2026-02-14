@@ -18,17 +18,42 @@ public class PathfindingGUI extends JFrame {
     private TerrainVisualizer visualizer;
     private JLabel statusLabel;
     private JLabel costLabel;
+    private JLabel complexityLabel;
     private JCheckBox diagonalCheckBox;
     private JTextField sizeField;
     private JTextField minHeightField;
     private JTextField maxHeightField;
+    private JTextField heightCoeffField;
+    private JButton dijkstraButton;
+    private JButton aStarButton;
+    private JButton potentialButton;
+    private JButton clearButton;
+    private JButton generateMapButton;
+    private JButton updateCoeffButton;
+    private JButton sensitivityButton;
+    private double[][] currentTerrain;
 
     public PathfindingGUI(Grid grid, Node start, Node end) {
         this.grid = grid;
         this.start = start;
         this.end = end;
+        
+        // Pobieramy dane terenu z grida
+        this.currentTerrain = extractTerrainData(grid);
 
         setupUI();
+    }
+
+    private double[][] extractTerrainData(Grid grid) {
+        int w = grid.getWidth();
+        int h = grid.getHeight();
+        double[][] data = new double[w][h];
+        for (int i = 0; i < w; i++) {
+            for (int j = 0; j < h; j++) {
+                data[j][i] = grid.getNode(i, j).elements.height;
+            }
+        }
+        return data;
     }
 
     private void setupUI() {
@@ -39,6 +64,13 @@ public class PathfindingGUI extends JFrame {
         // Panel wizualizacji
         visualizer = new TerrainVisualizer(grid);
         visualizer.setStartAndEnd(start, end);
+        visualizer.setOnPointsChanged((s, e) -> {
+            this.start = s;
+            this.end = e;
+            clearPath();
+            statusLabel.setText(String.format("Zmieniono punkty: Start(%d,%d), Cel(%d,%d)", 
+                start.elements.x, start.elements.y, end.elements.x, end.elements.y));
+        });
 
         JScrollPane scrollPane = new JScrollPane(visualizer);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Mapa Wysokości"));
@@ -63,40 +95,50 @@ public class PathfindingGUI extends JFrame {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         panel.setBorder(BorderFactory.createTitledBorder("Wybierz Algorytm"));
 
-        JButton dijkstraButton = new JButton("Dijkstra");
+        dijkstraButton = new JButton("Dijkstra");
         dijkstraButton.setBackground(new Color(255, 99, 71));
         dijkstraButton.setForeground(Color.WHITE);
         dijkstraButton.setFocusPainted(false);
         dijkstraButton.setFont(new Font("Arial", Font.BOLD, 14));
         dijkstraButton.addActionListener(e -> runDijkstra());
 
-        JButton aStarButton = new JButton("A*");
+        aStarButton = new JButton("A*");
         aStarButton.setBackground(new Color(30, 144, 255));
         aStarButton.setForeground(Color.WHITE);
         aStarButton.setFocusPainted(false);
         aStarButton.setFont(new Font("Arial", Font.BOLD, 14));
         aStarButton.addActionListener(e -> runAStar());
 
-        JButton potentialButton = new JButton("Metoda Potencjałów");
+        potentialButton = new JButton("Metoda Potencjałów");
         potentialButton.setBackground(new Color(255, 165, 0));
         potentialButton.setForeground(Color.WHITE);
         potentialButton.setFocusPainted(false);
         potentialButton.setFont(new Font("Arial", Font.BOLD, 14));
         potentialButton.addActionListener(e -> runPotentialMethod());
 
-        JButton clearButton = new JButton("Wyczyść");
+        clearButton = new JButton("Wyczyść");
         clearButton.setBackground(new Color(128, 128, 128));
         clearButton.setForeground(Color.WHITE);
         clearButton.setFocusPainted(false);
         clearButton.setFont(new Font("Arial", Font.BOLD, 14));
         clearButton.addActionListener(e -> clearPath());
 
-        JButton generateMapButton = new JButton("Generuj Mapę");
+        generateMapButton = new JButton("Generuj Mapę");
         generateMapButton.setBackground(new Color(60, 179, 113));
         generateMapButton.setForeground(Color.WHITE);
         generateMapButton.setFocusPainted(false);
         generateMapButton.setFont(new Font("Arial", Font.BOLD, 14));
         generateMapButton.addActionListener(e -> generateRandomMap());
+
+        sensitivityButton = new JButton("Analiza Wrażliwości");
+        sensitivityButton.setBackground(new Color(147, 112, 219));
+        sensitivityButton.setForeground(Color.WHITE);
+        sensitivityButton.setFocusPainted(false);
+        sensitivityButton.setFont(new Font("Arial", Font.BOLD, 14));
+        sensitivityButton.addActionListener(e -> {
+            AnalizaWrazliwosciGUI analysisGui = new AnalizaWrazliwosciGUI(grid, currentTerrain);
+            analysisGui.setVisible(true);
+        });
 
         diagonalCheckBox = new JCheckBox("Ruch na ukos", grid.czyNaUkos);
         diagonalCheckBox.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -107,6 +149,7 @@ public class PathfindingGUI extends JFrame {
         panel.add(potentialButton);
         panel.add(clearButton);
         panel.add(generateMapButton);
+        panel.add(sensitivityButton);
         panel.add(diagonalCheckBox);
 
         // Panel parametrów generowania
@@ -126,6 +169,24 @@ public class PathfindingGUI extends JFrame {
 
         panel.add(genParamsPanel);
 
+        // Panel współczynnika wysokości
+        JPanel coeffPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        coeffPanel.setBorder(BorderFactory.createTitledBorder("Koszt Wysokości"));
+        heightCoeffField = new JTextField(String.valueOf(grid.wspolczynnikWysokosci), 4);
+        coeffPanel.add(new JLabel("Współczynnik:"));
+        coeffPanel.add(heightCoeffField);
+        updateCoeffButton = new JButton("Aktualizuj");
+        updateCoeffButton.addActionListener(e -> {
+            try {
+                grid.wspolczynnikWysokosci = Double.parseDouble(heightCoeffField.getText());
+                statusLabel.setText("Zaktualizowano współczynnik wysokości na: " + grid.wspolczynnikWysokosci);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Nieprawidłowa wartość współczynnika!", "Błąd", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        coeffPanel.add(updateCoeffButton);
+        panel.add(coeffPanel);
+
         return panel;
     }
 
@@ -141,6 +202,7 @@ public class PathfindingGUI extends JFrame {
             }
 
             double[][] bitmapa = MapGenerator.generateRandomMap(n, n, minH, maxH);
+            this.currentTerrain = bitmapa;
             grid = new Grid(n, n, bitmapa, diagonalCheckBox.isSelected());
             start = grid.getNode(0, 0);
             end = grid.getNode(n - 1, n - 1);
@@ -167,13 +229,13 @@ public class PathfindingGUI extends JFrame {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JPanel textPanel = new JPanel(new GridLayout(3, 1, 5, 5));
+        JPanel textPanel = new JPanel(new GridLayout(4, 1, 5, 5));
 
         JLabel titleLabel = new JLabel("Wizualizacja Tras na Mapie Wysokości");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        statusLabel = new JLabel("Wybierz algorytm do wizualizacji trasy");
+        statusLabel = new JLabel("Wybierz algorytm lub kliknij na mapę (LPM: Start, PPM: Cel)");
         statusLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -182,9 +244,14 @@ public class PathfindingGUI extends JFrame {
         costLabel.setHorizontalAlignment(SwingConstants.CENTER);
         costLabel.setForeground(new Color(0, 128, 0));
 
+        complexityLabel = new JLabel("");
+        complexityLabel.setFont(new Font("Arial", Font.ITALIC, 14));
+        complexityLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
         textPanel.add(titleLabel);
         textPanel.add(statusLabel);
         textPanel.add(costLabel);
+        textPanel.add(complexityLabel);
 
         panel.add(textPanel, BorderLayout.CENTER);
 
@@ -228,9 +295,20 @@ public class PathfindingGUI extends JFrame {
         return item;
     }
 
+    private void setButtonsEnabled(boolean enabled) {
+        dijkstraButton.setEnabled(enabled);
+        aStarButton.setEnabled(enabled);
+        potentialButton.setEnabled(enabled);
+        clearButton.setEnabled(enabled);
+        generateMapButton.setEnabled(enabled);
+        updateCoeffButton.setEnabled(enabled);
+        diagonalCheckBox.setEnabled(enabled);
+    }
+
     private void runDijkstra() {
         statusLabel.setText("Uruchamianie algorytmu Dijkstry...");
         costLabel.setText("");
+        setButtonsEnabled(false);
 
         SwingWorker<List<Node>, Void> worker = new SwingWorker<>() {
             private double executionTime;
@@ -253,8 +331,8 @@ public class PathfindingGUI extends JFrame {
             protected void done() {
                 try {
                     List<Node> path = get();
+                    complexityLabel.setText("Dijkstra - Odwiedzone węzły: " + Logika.ZlozonoscObliczeniowa.getLiczbaOdwiedzonych());
                     if (path.isEmpty()) {
-                        statusLabel.setText("Dijkstra: Nie znaleziono trasy!");
                         costLabel.setText("");
                     } else {
                         visualizer.setPath(path, new Color(255, 99, 71));
@@ -263,6 +341,8 @@ public class PathfindingGUI extends JFrame {
                     }
                 } catch (Exception e) {
                     statusLabel.setText("Błąd: " + e.getMessage());
+                } finally {
+                    setButtonsEnabled(true);
                 }
             }
         };
@@ -272,6 +352,7 @@ public class PathfindingGUI extends JFrame {
     private void runAStar() {
         statusLabel.setText("Uruchamianie algorytmu A*...");
         costLabel.setText("");
+        setButtonsEnabled(false);
 
         SwingWorker<List<Node>, Void> worker = new SwingWorker<>() {
             private double executionTime;
@@ -294,8 +375,8 @@ public class PathfindingGUI extends JFrame {
             protected void done() {
                 try {
                     List<Node> path = get();
+                    complexityLabel.setText("A* - Odwiedzone węzły: " + Logika.ZlozonoscObliczeniowa.getLiczbaOdwiedzonych());
                     if (path.isEmpty()) {
-                        statusLabel.setText("A*: Nie znaleziono trasy!");
                         costLabel.setText("");
                     } else {
                         visualizer.setPath(path, new Color(30, 144, 255));
@@ -304,6 +385,8 @@ public class PathfindingGUI extends JFrame {
                     }
                 } catch (Exception e) {
                     statusLabel.setText("Błąd: " + e.getMessage());
+                } finally {
+                    setButtonsEnabled(true);
                 }
             }
         };
@@ -313,6 +396,7 @@ public class PathfindingGUI extends JFrame {
     private void runPotentialMethod() {
         statusLabel.setText("Uruchamianie metody potencjałów...");
         costLabel.setText("");
+        setButtonsEnabled(false);
 
         SwingWorker<List<Node>, Void> worker = new SwingWorker<>() {
             private double executionTime;
@@ -335,6 +419,7 @@ public class PathfindingGUI extends JFrame {
             protected void done() {
                 try {
                     List<Node> path = get();
+                    complexityLabel.setText("Metoda Potencjałów - Odwiedzone węzły: " + Logika.ZlozonoscObliczeniowa.getLiczbaOdwiedzonych());
                     if (path.isEmpty() || path.get(path.size() - 1) != end) {
                         statusLabel.setText("Metoda Potencjałów: Nie dotarła do celu!");
                         costLabel.setText(String.format("Algorytm utknął | Czas: %.3f ms", executionTime));
@@ -348,6 +433,8 @@ public class PathfindingGUI extends JFrame {
                     }
                 } catch (Exception e) {
                     statusLabel.setText("Błąd: " + e.getMessage());
+                } finally {
+                    setButtonsEnabled(true);
                 }
             }
         };
@@ -356,7 +443,8 @@ public class PathfindingGUI extends JFrame {
 
     private void clearPath() {
         visualizer.setPath(null, Color.RED);
-        statusLabel.setText("Wybierz algorytm do wizualizacji trasy");
+        statusLabel.setText("Wybierz algorytm lub kliknij na mapę (LPM: Start, PPM: Cel)");
         costLabel.setText("");
+        complexityLabel.setText("");
     }
 }

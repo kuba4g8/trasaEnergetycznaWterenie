@@ -1,5 +1,8 @@
-package Logika;
+package Testy;
 
+import Logika.Dijkstra;
+import Logika.MetodaPotencjalow;
+import Logika.aStar;
 import StrukturyDanych.Grid;
 import StrukturyDanych.Node;
 import java.util.ArrayList;

@@ -2,6 +2,8 @@ package Logika;
 
 import StrukturyDanych.Grid;
 import StrukturyDanych.Node;
+import Testy.ZlozonoscObliczeniowa;
+
 import java.util.*;
 
 public class aStar extends ZlozonoscObliczeniowa

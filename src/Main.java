@@ -1,5 +1,4 @@
 import GUI.PathfindingGUI;
-import Logika.AnalizaWrazliwosci;
 import Logika.MapGenerator;
 import StrukturyDanych.*;
 import javax.swing.*;

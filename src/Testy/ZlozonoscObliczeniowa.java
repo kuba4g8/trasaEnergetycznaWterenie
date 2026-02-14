@@ -1,4 +1,4 @@
-package Logika;
+package Testy;
 
 public abstract class ZlozonoscObliczeniowa
 {

@@ -2,12 +2,12 @@ package Logika;
 
 import StrukturyDanych.Grid;
 import StrukturyDanych.Node;
+import Testy.ZlozonoscObliczeniowa;
+
 import java.util.*;
 
 public class MetodaPotencjalow extends ZlozonoscObliczeniowa
 {
-    
-    
     public static List<Node> znajdzTrase(Grid terrainMap, Node startPoint, Node targetPoint)
     {
         resetLicznika();

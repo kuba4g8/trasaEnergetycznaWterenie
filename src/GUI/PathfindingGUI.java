@@ -331,7 +331,7 @@ public class PathfindingGUI extends JFrame {
             protected void done() {
                 try {
                     List<Node> path = get();
-                    complexityLabel.setText("Dijkstra - Odwiedzone węzły: " + Logika.ZlozonoscObliczeniowa.getLiczbaOdwiedzonych());
+                    complexityLabel.setText("Dijkstra - Odwiedzone węzły: " + Testy.ZlozonoscObliczeniowa.getLiczbaOdwiedzonych());
                     if (path.isEmpty()) {
                         costLabel.setText("");
                     } else {
@@ -375,7 +375,7 @@ public class PathfindingGUI extends JFrame {
             protected void done() {
                 try {
                     List<Node> path = get();
-                    complexityLabel.setText("A* - Odwiedzone węzły: " + Logika.ZlozonoscObliczeniowa.getLiczbaOdwiedzonych());
+                    complexityLabel.setText("A* - Odwiedzone węzły: " + Testy.ZlozonoscObliczeniowa.getLiczbaOdwiedzonych());
                     if (path.isEmpty()) {
                         costLabel.setText("");
                     } else {
@@ -419,7 +419,7 @@ public class PathfindingGUI extends JFrame {
             protected void done() {
                 try {
                     List<Node> path = get();
-                    complexityLabel.setText("Metoda Potencjałów - Odwiedzone węzły: " + Logika.ZlozonoscObliczeniowa.getLiczbaOdwiedzonych());
+                    complexityLabel.setText("Metoda Potencjałów - Odwiedzone węzły: " + Testy.ZlozonoscObliczeniowa.getLiczbaOdwiedzonych());
                     if (path.isEmpty() || path.get(path.size() - 1) != end) {
                         statusLabel.setText("Metoda Potencjałów: Nie dotarła do celu!");
                         costLabel.setText(String.format("Algorytm utknął | Czas: %.3f ms", executionTime));

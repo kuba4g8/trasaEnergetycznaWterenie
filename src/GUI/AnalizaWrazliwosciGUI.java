@@ -1,7 +1,7 @@
 package GUI;
 
-import Logika.AnalizaWrazliwosci;
-import Logika.AnalizaWrazliwosci.WynikAnalizy;
+import Testy.AnalizaWrazliwosci;
+import Testy.AnalizaWrazliwosci.WynikAnalizy;
 import StrukturyDanych.Grid;
 
 import javax.swing.*;

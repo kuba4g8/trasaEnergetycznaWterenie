@@ -1,6 +1,9 @@
 import GUI.PathfindingGUI;
 import Logika.MapGenerator;
 import StrukturyDanych.*;
+import Testy.AnalizaWrazliwosci;
+import Testy.TestyStatystyczne;
+
 import javax.swing.*;
 
 public class Main {
@@ -8,7 +11,7 @@ public class Main {
         double[][] bitmapa;
         
         // to nawet spoczi mapa ale mozna zmienic i bedzie inna
-        long seed = 42L;
+        long seed = 42069L;
         bitmapa = MapGenerator.generateRandomMap(1000, 1000, -100, 300, seed);
         boolean czyMozeIscNaUkos = false;
         
@@ -18,15 +21,37 @@ public class Main {
         // 0 -> Dijkstra
         // 1 -> A*
         // 2 -> potencjaly
-/*        AnalizaWrazliwosci.uruchom(bitmapa, 0);
+        AnalizaWrazliwosci.uruchom(bitmapa, 0);
         AnalizaWrazliwosci.uruchom(bitmapa, 1);
-        AnalizaWrazliwosci.uruchom(bitmapa, 2);*/
+        AnalizaWrazliwosci.uruchom(bitmapa, 2);
         
         // Odkomentuj poniższe linie, aby wygenerować dane do sprawozdania w konsoli
         // AnalizaWrazliwosci.uruchom(bitmapa, 0);
         // AnalizaWrazliwosci.uruchom(bitmapa, 1);
+        //rozpocznijTesty();
+        
+        //startGUI(terrain, start, target);
+    }
+    
+    private static void rozpocznijTesty()
+    {
+        long seed = 42L;
+        double[][] bitmapa = MapGenerator.generateRandomMap(250, 250, -100, 300, seed);
 
-        // Uruchomienie GUI
+        Grid terrain = new Grid(bitmapa.length, bitmapa.length, bitmapa, false);
+        terrain.wspolczynnikWysokosci = 1;
+        
+        TestyStatystyczne testy = new TestyStatystyczne(terrain);
+        
+        // Ustawiamy Alpha na 1.0 (standard dla porównania)
+        terrain.wspolczynnikWysokosci = 1.0;
+        
+        // Uruchamiamy 50 losowych prób
+        testy.uruchomTestyLosowe(50);
+    }
+    
+    private static void startGUI(Grid terrain, Node start, Node target)
+    {
         SwingUtilities.invokeLater(() -> {
             PathfindingGUI gui = new PathfindingGUI(terrain, start, target);
             gui.setVisible(true);
